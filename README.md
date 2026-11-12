@@ -2,6 +2,12 @@
 
 Un jeu de reconstruction de phrases à projeter en classe. Deux équipes partent d’un indice et remettent les briques dans l’ordre pour retrouver une phrase. Chaque bonne réponse fait avancer le mur de l’équipe.
 
+## Jouer dans le navigateur
+
+[**Ouvrir Brick by Brick**](https://courscircuit.github.io/BrickByBrick/)
+
+Les listes, classes et parties sont enregistrées dans le navigateur utilisé. Pour transférer vos listes et classes entre le Mac et le navigateur, utilisez l’export et l’import d’une sauvegarde JSON dans la bibliothèque.
+
 ## Télécharger pour Mac
 
 [**Brick by Brick 2.2.0 — DMG universel**](https://github.com/CoursCircuit/BrickByBrick/releases/tag/v2.2.0)
