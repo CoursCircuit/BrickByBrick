@@ -28,4 +28,6 @@ npm run dist -- --mac --universal
 
 Le code est publié sous [licence MIT](LICENSE.txt). La police [Inter est distribuée sous SIL Open Font License 1.1](assets/fonts/OFL-Inter.txt).
 
-Application créée par S. Bovat pour ses propres besoins en classe, en vibe coding, sans formation de développeur.
+Cette application a été vibe codée par un non-développeur, à l’origine pour ses propres besoins.
+
+Créé par S. Bovat
