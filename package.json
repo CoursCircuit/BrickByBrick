@@ -1,0 +1,71 @@
+{
+  "name": "brick-by-brick",
+  "productName": "Brick by Brick",
+  "version": "2.2.0",
+  "description": "Jeu de reconstruction de phrases à projeter en classe.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "test": "node --test",
+    "pack": "electron-builder --dir"
+  },
+  "keywords": [],
+  "author": "S. Bovat",
+  "build": {
+    "appId": "com.SBovat.brickbybrick",
+    "productName": "Brick by Brick",
+    "directories": {
+      "output": "dist/v2"
+    },
+    "files": [
+      "main.js",
+      "index.html",
+      "script.js",
+      "logic.js",
+      "data.js",
+      "ui.js",
+      "library.js",
+      "classes.js",
+      "assistant.js",
+      "styles.css",
+      "play.css",
+      "assets/**/*",
+      "icon.png",
+      "README.txt",
+      "LICENSE.txt"
+    ],
+    "mac": {
+      "target": "dmg",
+      "hardenedRuntime": false,
+      "identity": "-",
+      "category": "public.app-category.education",
+      "icon": "icon.icns",
+      "notarize": false,
+      "minimumSystemVersion": "13.0.0"
+    },
+    "dmg": {
+      "iconSize": 128,
+      "backgroundColor": "#111c2b",
+      "contents": [
+        {
+          "x": 140,
+          "y": 220,
+          "type": "file"
+        },
+        {
+          "x": 420,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "artifactName": "Brick-by-Brick-${version}-${arch}.${ext}"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "44.11.1",
+    "electron-builder": "26.18.0"
+  }
+}

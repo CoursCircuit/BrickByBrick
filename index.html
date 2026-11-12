@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <title>Brick by Brick</title>
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="play.css">
+  <script defer src="logic.js"></script>
+  <script defer src="data.js"></script>
+  <script defer src="ui.js"></script>
+  <script defer src="library.js"></script>
+  <script defer src="classes.js"></script>
+  <script defer src="assistant.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <div id="setup">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand"><span data-icon="brand" aria-hidden="true"></span><span>Brick by Brick</span></div>
+        <nav class="topnav" aria-label="Préparation">
+          <button class="nav-button" type="button" id="open-library"><span data-icon="book"></span>Bibliothèque</button>
+          <button class="nav-button" type="button" id="open-classes"><span data-icon="users"></span>Classes</button>
+          <button class="nav-button" type="button" id="open-assistant"><span data-icon="sparkles"></span>Assistant IA</button>
+          <button class="nav-button help-button icon-button" type="button" id="open-help" aria-label="Règles du jeu" title="Règles du jeu"><span data-icon="help"></span></button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="intro" aria-labelledby="setup-title">
+        <div class="intro-copy">
+          <h1 id="setup-title" tabindex="-1">À vous de construire.</h1>
+          <p>Préparez les phrases à reconstruire et lancez le défi.</p>
+        </div>
+      </section>
+
+      <p class="notice" id="storage-notice" hidden role="alert"></p>
+      <div class="setup-grid">
+        <section class="panel phrase-panel" aria-labelledby="phrases-title">
+          <div class="panel-heading">
+            <h2 id="phrases-title">Phrases de la partie</h2>
+            <button class="button" type="button" id="open-list"><span data-icon="folder"></span>Ouvrir une liste</button>
+          </div>
+          <div class="phrase-label">
+            <label for="phrase-input">Réponse ; indice</label>
+            <span class="list-source" id="active-list" hidden></span>
+          </div>
+          <textarea id="phrase-input" dir="auto" class="phrase-input" spellcheck="false" maxlength="200000" aria-describedby="phrase-status" placeholder="Ich spiele gern Tennis. ; J’aime jouer au tennis."></textarea>
+          <details class="validation" id="phrase-errors" hidden>
+            <summary id="phrase-error-count"></summary>
+            <ul id="phrase-error-list"></ul>
+          </details>
+          <div class="phrase-footer">
+            <span class="muted tabular" id="phrase-status" role="status"></span>
+            <button class="button quiet" type="button" id="import-list"><span data-icon="upload"></span>Importer un fichier</button>
+            <input id="list-file" type="file" accept=".txt,.tsv,.csv,text/plain,text/tab-separated-values,text/csv" hidden>
+            <button class="button text-button save-list" type="button" id="save-list"><span data-icon="save"></span>Enregistrer la liste</button>
+          </div>
+        </section>
+
+        <section class="panel settings-panel" aria-labelledby="settings-title">
+          <div class="panel-heading"><h2 id="settings-title">Réglages de la partie</h2></div>
+          <div class="field">
+            <label for="class-select">Classe</label>
+            <select id="class-select"></select>
+          </div>
+          <div class="team-fields" id="guest-fields">
+            <label class="team-field team-jade"><span class="team-dot"></span><input id="guest-jade" maxlength="36" aria-label="Nom de l’équipe verte" placeholder="Équipe verte"></label>
+            <label class="team-field team-amber"><span class="team-dot"></span><input id="guest-amber" maxlength="36" aria-label="Nom de l’équipe orange" placeholder="Équipe orange"></label>
+          </div>
+          <div class="team-fields" id="group-fields" hidden>
+            <label class="team-field team-jade"><span class="team-dot"></span><select id="group-jade" aria-label="Groupe de l’équipe verte"></select></label>
+            <label class="team-field team-amber"><span class="team-dot"></span><select id="group-amber" aria-label="Groupe de l’équipe orange"></select></label>
+          </div>
+          <fieldset class="field">
+            <legend>Briques par phrase</legend>
+            <div class="segmented">
+              <label><input type="radio" name="parts" value="2"><span>2</span></label>
+              <label><input type="radio" name="parts" value="3"><span>3</span></label>
+              <label><input type="radio" name="parts" value="4"><span>4</span></label>
+              <label><input type="radio" name="parts" value="5"><span>5</span></label>
+            </div>
+          </fieldset>
+          <div class="field">
+            <label for="goal-select">Points pour gagner</label>
+            <select id="goal-select"></select>
+          </div>
+          <label class="check-field"><input id="click-to-build" type="checkbox">Assembler les briques par clic</label>
+          <div class="start-actions">
+            <p class="hint" id="play-note" hidden></p>
+            <button class="button primary launch" type="button" id="start-game">Lancer la partie<span data-icon="arrow-right"></span></button>
+            <button class="button quiet resume" type="button" id="resume-game" hidden><span data-icon="play"></span>Reprendre la partie</button>
+            <small class="creator-credit">Créé par S. Bovat</small>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div id="game" hidden>
+    <header class="topbar play-topbar">
+      <div class="topbar-inner">
+        <button class="nav-button" type="button" id="home-button"><span data-icon="arrow-left"></span>Préparation</button>
+        <div class="brand" aria-hidden="true"><span data-icon="brand"></span></div>
+        <button class="nav-button" type="button" id="fullscreen"><span data-icon="expand"></span><span id="fullscreen-label">Plein écran</span></button>
+      </div>
+    </header>
+    <main class="arena" aria-label="Partie de Brick by Brick" tabindex="-1" id="arena">
+      <div class="cue-grid" id="team-cues"></div>
+      <section class="brick-zone" id="brick-zone" aria-label="Briques">
+        <div id="brick-area" class="brick-pool" role="group" aria-label="Briques disponibles"></div>
+        <div id="assembly-grid" class="assembly-grid" hidden></div>
+      </section>
+      <div class="wall-stage" aria-hidden="true">
+        <div class="wall-render team-jade" id="wall-jade"></div>
+        <div class="wall-render team-amber" id="wall-amber"></div>
+      </div>
+      <div class="game-controls">
+        <button class="button validate team-jade" type="button" id="validate-jade"><kbd>1</kbd>Valider<span class="sr-only"> l’équipe verte</span></button>
+        <div class="game-tools">
+          <button class="nav-button" type="button" id="undo-game" title="Annuler la dernière action (Z)"><span data-icon="undo"></span>Annuler</button>
+          <button class="nav-button" type="button" id="game-help-button"><span data-icon="help"></span>Aide</button>
+        </div>
+        <button class="button validate team-amber" type="button" id="validate-amber"><kbd>2</kbd>Valider<span class="sr-only"> l’équipe orange</span></button>
+      </div>
+    </main>
+  </div>
+  <template id="team-card-template">
+    <article class="team-card">
+      <div class="team-card-inner">
+        <div class="team-card-header">
+          <h2 class="team-name" dir="auto"></h2>
+          <div class="team-card-controls">
+            <button class="nav-button icon-button cue-expand" type="button" hidden></button>
+            <div class="team-score"><strong>00</strong><span></span></div>
+          </div>
+        </div>
+        <p class="team-clue"><span dir="auto"></span></p>
+      </div>
+    </article>
+  </template>
+  <template id="assembly-template">
+    <div class="assembly-lane">
+      <div class="assembly-slots" role="group" dir="auto"></div>
+      <button class="button assembly-hint" type="button"><kbd></kbd></button>
+    </div>
+  </template>
+
+  <dialog class="dialog wide" id="library-dialog" aria-labelledby="library-title">
+    <header class="dialog-header">
+      <h2 id="library-title">Bibliothèque de phrases</h2>
+      <button class="button icon-button" type="button" data-close aria-label="Fermer la bibliothèque"><span data-icon="x"></span></button>
+    </header>
+    <div class="dialog-split">
+      <aside class="dialog-sidebar">
+        <div class="aside-title"><h3>Dossiers</h3><button class="button icon-button" type="button" id="new-folder" aria-label="Nouveau dossier" title="Nouveau dossier"><span data-icon="plus"></span></button></div>
+        <div id="folder-list" class="side-list" aria-label="Filtrer par dossier"></div>
+      </aside>
+      <div class="dialog-main">
+        <div class="catalog-toolbar">
+          <label class="search-field"><span data-icon="search"></span><input id="library-search" type="search" placeholder="Rechercher une liste" aria-label="Rechercher une liste" autofocus></label>
+          <button class="button primary" type="button" id="new-list"><span data-icon="plus"></span>Nouvelle liste</button>
+        </div>
+        <div class="record-list" id="library-list"></div>
+        <div class="backup-actions">
+          <button class="button" type="button" id="export-backup"><span data-icon="download"></span>Exporter une sauvegarde</button>
+          <button class="button" type="button" id="import-backup"><span data-icon="upload"></span>Importer une sauvegarde</button>
+          <input id="backup-file" type="file" accept=".json,application/json" hidden>
+          <p class="status" id="backup-status" role="status" hidden></p>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="dialog compact" id="folder-dialog" aria-labelledby="folder-title">
+    <header class="dialog-header">
+      <h2 id="folder-title">Nouveau dossier</h2>
+      <button class="button icon-button" type="button" data-close aria-label="Fermer l’éditeur de dossier"><span data-icon="x"></span></button>
+    </header>
+    <form class="dialog-body" id="folder-form">
+      <label class="field">Nom du dossier<input id="folder-name" required maxlength="70" autofocus></label>
+      <p class="status" id="folder-status" role="status" hidden></p>
+      <div class="dialog-actions">
+        <button class="button danger" type="button" id="delete-folder" hidden><span data-icon="trash"></span>Supprimer le dossier</button>
+        <button class="button primary" type="submit">Enregistrer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="dialog medium" id="list-dialog" aria-labelledby="list-title">
+    <header class="dialog-header">
+      <h2 id="list-title">Nouvelle liste</h2>
+      <button class="button icon-button" type="button" data-close aria-label="Fermer l’éditeur de liste"><span data-icon="x"></span></button>
+    </header>
+    <form class="dialog-body" id="list-form">
+      <div class="form-row">
+        <label class="field">Nom de la liste<input id="list-name" maxlength="70" required autofocus></label>
+        <label class="field">Dossier<select id="list-folder"></select></label>
+      </div>
+      <label class="field">Réponse ; indice
+        <textarea id="list-text" dir="auto" class="mono" spellcheck="false" maxlength="200000" rows="8" placeholder="Une paire par ligne"></textarea>
+      </label>
+      <p class="status" id="list-status" role="status"></p>
+      <div class="dialog-actions">
+        <button class="button" id="save-copy" type="submit" value="copy" hidden>Enregistrer une copie</button>
+        <button class="button primary" id="confirm-list" type="submit">Enregistrer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="dialog wide" id="classes-dialog" aria-labelledby="classes-title">
+    <header class="dialog-header">
+      <h2 id="classes-title">Classes et groupes</h2>
+      <button class="button icon-button" type="button" id="close-classes" aria-label="Fermer les classes"><span data-icon="x"></span></button>
+    </header>
+    <div class="dialog-split">
+      <aside class="dialog-sidebar">
+        <div class="aside-title"><h3>Classes</h3><button class="button icon-button" type="button" id="new-class" aria-label="Nouvelle classe" title="Nouvelle classe"><span data-icon="plus"></span></button></div>
+        <div id="class-list" class="side-list" aria-label="Classes enregistrées"></div>
+      </aside>
+      <div class="dialog-main">
+        <div class="empty-state" id="class-empty">
+          <span data-icon="users"></span>
+          <p>Créez une classe pour retrouver ses groupes à chaque partie.</p>
+          <button class="button primary" id="create-first-class" type="button"><span data-icon="plus"></span>Créer une classe</button>
+        </div>
+        <form class="class-form" id="class-form" hidden>
+          <label class="field">Nom de la classe<input id="class-name" required maxlength="70" placeholder="11VG4"></label>
+          <div class="groups-heading"><h3>Groupes</h3><button class="button quiet" type="button" id="add-group"><span data-icon="plus"></span>Ajouter un groupe</button></div>
+          <p class="hint">Seuls les noms des groupes s’affichent pendant la partie.</p>
+          <div class="group-list" id="class-groups"></div>
+          <p class="status" id="class-status" role="status" hidden></p>
+          <div class="dialog-actions">
+            <button class="button danger" type="button" id="delete-class" hidden><span data-icon="trash"></span>Supprimer la classe</button>
+            <button class="button primary" type="submit">Enregistrer la classe</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="dialog wide" id="assistant-dialog" aria-labelledby="assistant-title">
+    <header class="dialog-header">
+      <h2 id="assistant-title">Assistant de prompt</h2>
+      <button class="button icon-button" type="button" data-close aria-label="Fermer l’assistant"><span data-icon="x"></span></button>
+    </header>
+    <div class="dialog-body assistant-grid">
+      <form id="prompt-form" class="prompt-form">
+        <label class="field">Type d’activité
+          <select name="mode"><option value="translation">Traduction</option><option value="clue">Question ou indice</option></select>
+        </label>
+        <div class="form-row">
+          <label class="field">Matière<input name="subject" value="Allemand" maxlength="80"></label>
+          <label class="field">Thème<input name="theme" value="Le sport" maxlength="100"></label>
+        </div>
+        <div class="form-row">
+          <label class="field">Niveau<input name="level" value="A2" maxlength="60" placeholder="A2, 11e, débutant…"></label>
+          <label class="field">Nombre de phrases<input name="count" type="number" min="2" max="60" value="12"></label>
+        </div>
+        <div class="form-row">
+          <label class="field">Langue des réponses<input name="answerLanguage" value="allemand" maxlength="40"></label>
+          <label class="field">Langue des indices<input name="cueLanguage" value="français" maxlength="40"></label>
+        </div>
+        <label class="field">Consigne pédagogique <span class="muted">(facultatif)</span>
+          <textarea name="instructions" rows="3" maxlength="600" placeholder="Ex. travailler les verbes à particule séparable"></textarea>
+        </label>
+      </form>
+      <div class="prompt-output">
+        <div class="groups-heading"><label for="prompt-text">Prompt à copier</label><button class="button primary" type="button" id="copy-prompt"><span data-icon="copy"></span>Copier le prompt</button></div>
+        <textarea id="prompt-text" class="mono" rows="7" readonly spellcheck="false"></textarea>
+        <p class="status" id="prompt-status" role="status" hidden></p>
+        <label class="field">Réponse de l’IA
+          <textarea id="assistant-result" class="mono" dir="auto" rows="4" maxlength="200000" spellcheck="false" placeholder="Collez ici les paires générées."></textarea>
+        </label>
+        <p class="status" id="assistant-status" role="status" hidden></p>
+        <button class="button" type="button" id="use-assistant-result" disabled><span data-icon="arrow-right"></span>Utiliser les phrases</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="dialog medium" id="help-dialog" aria-labelledby="help-title">
+    <header class="dialog-header"><h2 id="help-title">Règles du jeu</h2><button class="button icon-button" type="button" data-close aria-label="Fermer les règles"><span data-icon="x"></span></button></header>
+    <div class="dialog-body">
+      <ol class="help-steps">
+        <li>Préparez au moins deux paires au format <strong>Réponse ; indice</strong>, une par ligne. Vous pouvez aussi coller deux colonnes depuis un tableur.</li>
+        <li>Chaque équipe retrouve sa phrase à l’oral en s’aidant de l’indice et des briques de sa couleur.</li>
+        <li>Validez avec <kbd>1</kbd> ou <kbd>2</kbd>. La phrase correcte s’affiche deux secondes, puis le mur monte et les briques en jeu se mélangent. L’équipe qui atteint l’objectif gagne.</li>
+      </ol>
+      <p class="muted">Pour placer les briques à l’écran, cochez <strong>Assembler les briques par clic</strong> dans les réglages. Recliquez sur une brique posée pour la remettre dans la réserve. <kbd>Q</kbd> et <kbd>W</kbd> placent la prochaine brique correcte de chaque équipe.</p>
+      <p class="muted">En partie, <kbd>Z</kbd> annule la dernière validation ou le dernier passage. <kbd>F</kbd> active le plein écran. Ouvrez <strong>Aide</strong> pour montrer une réponse ou passer une phrase.</p>
+    </div>
+  </dialog>
+
+  <dialog class="dialog medium" id="game-help" aria-labelledby="game-help-title">
+    <header class="dialog-header"><h2 id="game-help-title">Aide à la partie</h2><button class="button icon-button" type="button" data-close aria-label="Fermer l’aide"><span data-icon="x"></span></button></header>
+    <div class="dialog-body">
+      <div class="team-help team-jade">
+        <h3 id="help-jade-name">Équipe verte</h3>
+        <div><button class="button" type="button" id="reveal-jade"><span data-icon="eye"></span><span>Voir la réponse</span></button>
+          <button class="button quiet" type="button" id="skip-jade"><span data-icon="skip"></span>Passer</button></div>
+      </div>
+      <div class="team-help team-amber">
+        <h3 id="help-amber-name">Équipe orange</h3>
+        <div><button class="button" type="button" id="reveal-amber"><span data-icon="eye"></span><span>Voir la réponse</span></button>
+          <button class="button quiet" type="button" id="skip-amber"><span data-icon="skip"></span>Passer</button></div>
+      </div>
+      <p class="hint">Raccourcis : <kbd>1</kbd> et <kbd>2</kbd> pour valider, <kbd>Z</kbd> pour annuler, <kbd>F</kbd> pour le plein écran.</p>
+    </div>
+  </dialog>
+
+  <dialog class="dialog medium clue-dialog" id="clue-dialog" aria-labelledby="clue-title">
+    <header class="dialog-header"><h2 id="clue-title"></h2><button class="button icon-button" type="button" data-close aria-label="Fermer le texte agrandi"><span data-icon="x"></span></button></header>
+    <div class="dialog-body"><p id="clue-copy" dir="auto"></p></div>
+  </dialog>
+
+  <dialog class="solution-overlay" id="solution-dialog" aria-label="Solution" aria-describedby="solution-answer">
+    <div class="solution-card" tabindex="-1" autofocus>
+      <span class="sr-only" id="solution-answer" dir="auto"></span>
+      <div class="solution-bricks" id="solution-bricks" aria-hidden="true" dir="auto"></div>
+    </div>
+  </dialog>
+
+  <dialog class="dialog victory" id="winner-dialog" aria-labelledby="winner-title">
+    <div class="dialog-body">
+      <div class="victory-symbol" data-icon="trophy" aria-hidden="true"></div>
+      <h2 id="winner-title"></h2>
+      <p id="winner-score"></p>
+      <div class="dialog-actions">
+        <button class="button" type="button" id="winner-home">Préparation</button>
+        <button class="button primary" type="button" id="replay-game"><span data-icon="replay"></span>Rejouer</button>
+      </div>
+      <button class="button text-button" type="button" id="undo-win"><span data-icon="undo"></span>Annuler le dernier point</button>
+    </div>
+  </dialog>
+
+  <dialog class="dialog compact" id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-text">
+    <form method="dialog" class="dialog-body">
+      <h2 id="confirm-title"></h2>
+      <p id="confirm-text" class="muted"></p>
+      <div class="dialog-actions">
+        <button class="button" value="cancel" autofocus>Annuler</button>
+        <button class="button primary" value="confirm" id="confirm-action"></button>
+      </div>
+    </form>
+  </dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <div id="game-announcer" class="sr-only" aria-live="polite"></div>
+</body>
+</html>
